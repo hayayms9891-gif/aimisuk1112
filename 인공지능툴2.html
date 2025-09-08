@@ -1,0 +1,618 @@
+import React, { useMemo, useState } from "react";
+
+// =====================
+// 데이터: 대표 AI 학습 툴 20
+// =====================
+const TOOLS = [
+  {
+    id: "chatgpt",
+    name: "ChatGPT",
+    category: "text",
+    level: "beginner",
+    summary:
+      "한국어 지원이 뛰어난 범용 AI 챗봇. 글쓰기, 학습 보조, 수업자료 초안에 적합.",
+    features: ["질문/요약/번역", "학습지·PPT 초안", "맞춤 튜터"],
+    website: "https://chatgpt.com/",
+  },
+  {
+    id: "gemini",
+    name: "Google Gemini",
+    category: "text",
+    level: "beginner",
+    summary:
+      "구글 생태계와 연동이 쉬운 AI 비서. 이미지·문서 혼합 입력과 최신 검색 연계.",
+    features: ["구글드라이브 연계", "멀티모달", "검색 기반 답변"],
+    website: "https://gemini.google.com/",
+  },
+  {
+    id: "perplexity",
+    name: "Perplexity",
+    category: "search",
+    level: "intermediate",
+    summary:
+      "출처가 명확한 탐색형 Q&A. 리서치와 최신 정보 학습에 최적.",
+    features: ["실시간 검색", "출처 인용", "딥서치 스레드"],
+    website: "https://www.perplexity.ai/",
+  },
+  {
+    id: "claude",
+    name: "Claude",
+    category: "text",
+    level: "beginner",
+    summary:
+      "긴 문서 이해와 자연스러운 한국어 표현에 강점인 대화형 AI.",
+    features: ["긴문서 요약", "상냥한 설명", "문서 비평"],
+    website: "https://claude.ai/",
+  },
+  {
+    id: "vrew",
+    name: "Vrew",
+    category: "video",
+    level: "beginner",
+    summary: "자동 자막과 간단한 컷편집으로 영상 제작을 가볍게.",
+    features: ["자동 자막", "텍스트 기반 편집", "리소스 제공"],
+    website: "https://vrew.ai/ko/",
+  },
+  {
+    id: "videostew",
+    name: "비디오스튜 (VideoStew)",
+    category: "video",
+    level: "beginner",
+    summary:
+      "웹 기반 AI 영상 편집. 텍스트→영상(TTV) 자동 생성 지원.",
+    features: ["텍스트·URL→영상", "슬라이드형 편집", "AI 보이스/BGM"],
+    website: "https://videostew.com/",
+  },
+  {
+    id: "gamma",
+    name: "Gamma",
+    category: "platform",
+    level: "beginner",
+    summary:
+      "AI 프레젠테이션/문서/웹페이지 제작. 브랜드 테마와 내보내기 지원.",
+    features: ["슬라이드 자동 생성", "브랜딩 테마", "PPT/PDF 내보내기"],
+    website: "https://gamma.app/ko",
+  },
+  {
+    id: "napkin",
+    name: "Napkin AI",
+    category: "image",
+    level: "beginner",
+    summary: "글을 붙여 넣으면 알맞은 시각 자료를 자동 생성/제안.",
+    features: ["텍스트→비주얼", "여러 시안", "간단 편집"],
+    website: "https://www.napkin.ai/",
+  },
+  {
+    id: "suno",
+    name: "Suno",
+    category: "video",
+    level: "beginner",
+    summary: "프롬프트만으로 작사/작곡/보컬까지 완성형 음악 생성.",
+    features: ["가사 생성", "보컬/반주 합성", "스템 추출"],
+    website: "https://suno.com/",
+  },
+  {
+    id: "capcut",
+    name: "CapCut",
+    category: "video",
+    level: "beginner",
+    summary: "AI 효과와 템플릿이 풍부한 올인원 영상 편집기.",
+    features: ["자동 편집 템플릿", "음성/자막 도구", "멀티플랫폼"],
+    website: "https://www.capcut.com/",
+  },
+  {
+    id: "canva",
+    name: "Canva",
+    category: "image",
+    level: "beginner",
+    summary:
+      "프레젠테이션·포스터·동영상까지 손쉬운 디자인 플랫폼.",
+    features: ["수천개 템플릿", "배경 제거/확장", "팀 협업"],
+    website: "https://www.canva.com/ko_kr/",
+  },
+  {
+    id: "lilys",
+    name: "Lilys AI",
+    category: "writing",
+    level: "beginner",
+    summary: "영상/오디오/PDF/웹페이지를 자동으로 요약 노트로 정리.",
+    features: ["멀티포맷 요약", "핵심 키포인트", "다국어"],
+    website: "https://lilys.ai/",
+  },
+  {
+    id: "notebooklm",
+    name: "NotebookLM",
+    category: "platform",
+    level: "beginner",
+    summary:
+      "내 자료를 기반으로 질의응답/요약하는 구글의 리서치 도구.",
+    features: ["PDF·문서 업로드", "소스 기반 Q&A", "개요/요약 생성"],
+    website: "https://notebooklm.google/",
+  },
+  {
+    id: "wrtn",
+    name: "뤼튼 (Wrtn)",
+    category: "text",
+    level: "beginner",
+    summary: "국내 생성형 AI 포털. 채팅·검색·이미지·도구를 통합 제공.",
+    features: ["한국어 최적화", "멀티모달", "AI 서포터"],
+    website: "https://wrtn.ai/",
+  },
+  {
+    id: "tiro",
+    name: "티로 (Tiro)",
+    category: "writing",
+    level: "beginner",
+    summary: "회의/강연을 실시간으로 기록·요약하는 AI 노트테이킹.",
+    features: ["실시간 음성→텍스트", "한 페이지 요약", "문서 자동 생성"],
+    website: "https://tiro.ooo/ko/",
+  },
+  {
+    id: "clovanote",
+    name: "클로바노트",
+    category: "writing",
+    level: "beginner",
+    summary: "녹음 파일 받아쓰기와 요약이 강한 네이버 회의록 도구.",
+    features: ["음성 인식", "요약/하이라이트", "링크 공유"],
+    website: "https://clovanote.naver.com/",
+  },
+  {
+    id: "google-ai-studio",
+    name: "Google AI Studio",
+    category: "coding",
+    level: "intermediate",
+    summary:
+      "Gemini API로 프롬프트 실험과 앱 프로토타이핑을 하는 개발자 도구.",
+    features: ["프롬프트 갤러리", "API 키", "코드 스니펫"],
+    website: "https://aistudio.google.com/",
+  },
+  {
+    id: "magicwrite",
+    name: "Canva Magic Write",
+    category: "writing",
+    level: "beginner",
+    summary: "Canva 문서·슬라이드에서 글감 생성/요약/다듬기를 돕는 AI.",
+    features: ["아이데이션", "요약/확장", "톤 변경"],
+    website: "https://www.canva.com/ko_kr/magic/",
+  },
+  {
+    id: "genspark",
+    name: "젠스파크 (Genspark)",
+    category: "search",
+    level: "beginner",
+    summary: "생성형 AI 기반 통합 검색·문서 생성 워크스페이스.",
+    features: ["AI 검색", "슬라이드/문서 생성", "멀티모달"],
+    website: "https://www.genspark.ai/",
+  },
+  {
+    id: "heygen",
+    name: "헤이젠 (HeyGen)",
+    category: "video",
+    level: "beginner",
+    summary:
+      "텍스트만으로 아바타 프레젠터 영상을 만드는 생성형 영상 도구.",
+    features: ["아바타 프레젠터", "자막/번역", "클론 보이스"],
+    website: "https://www.heygen.com/",
+  },
+] as const;
+
+const CATEGORY_LABEL: Record<string, string> = {
+  all: "전체",
+  text: "대화/텍스트",
+  search: "검색/리서치",
+  writing: "요약/필기",
+  image: "디자인/이미지",
+  video: "영상/오디오",
+  coding: "개발",
+  platform: "학습/플랫폼",
+};
+
+type Tool = (typeof TOOLS)[number];
+
+type Filters = {
+  q: string;
+  category: keyof typeof CATEGORY_LABEL | "all";
+  level: "all" | "beginner" | "intermediate" | "advanced";
+  sort: "name" | "recent";
+};
+
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-neutral-700 border-neutral-200 bg-white/60">
+      {children}
+    </span>
+  );
+}
+
+function LevelDot({ level }: { level: Tool["level"] }) {
+  const color =
+    level === "beginner"
+      ? "bg-emerald-500"
+      : level === "intermediate"
+      ? "bg-amber-500"
+      : "bg-rose-500";
+  const label =
+    level === "beginner" ? "입문" : level === "intermediate" ? "중급" : "고급";
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
+      <span className={`h-2 w-2 rounded-full ${color}`} /> {label}
+    </span>
+  );
+}
+
+export default function AIHomePage() {
+  const [filters, setFilters] = useState<Filters>({
+    q: "",
+    category: "all",
+    level: "all",
+    sort: "name",
+  });
+  const [detail, setDetail] = useState<Tool | null>(null);
+  const [compare, setCompare] = useState<Tool[]>([]);
+
+  const filtered = useMemo(() => {
+    let list = [...TOOLS];
+    if (filters.q.trim()) {
+      const q = filters.q.trim().toLowerCase();
+      list = list.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.summary.toLowerCase().includes(q) ||
+          t.features.some((f) => f.toLowerCase().includes(q))
+      );
+    }
+    if (filters.category !== "all") {
+      list = list.filter((t) => t.category === filters.category);
+    }
+    if (filters.level !== "all") {
+      list = list.filter((t) => t.level === filters.level);
+    }
+    if (filters.sort === "name") {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  }, [filters]);
+
+  const toggleCompare = (tool: Tool) => {
+    setCompare((prev) => {
+      const exists = prev.find((t) => t.id === tool.id);
+      if (exists) return prev.filter((t) => t.id !== tool.id);
+      if (prev.length >= 3) return prev; // 최대 3개
+      return [...prev, tool];
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-neutral-50">
+      {/* 헤더 */}
+      <header className="sticky top-0 z-20 backdrop-blur bg-white/70 border-b border-neutral-200">
+        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="h-8 w-8 rounded-2xl bg-indigo-600 text-white grid place-items-center font-bold">AI</span>
+            <div>
+              <h1 className="text-lg font-semibold leading-tight">AI 학습 대표 툴 20</h1>
+              <p className="text-xs text-neutral-500">수업·과제·콘텐츠 제작에 바로 쓰는 생성형 AI 모음</p>
+            </div>
+          </div>
+          <a
+            href="#faq"
+            className="text-sm rounded-full border border-neutral-200 px-3 py-1.5 hover:bg-neutral-100"
+          >
+            가이드/FAQ
+          </a>
+        </div>
+      </header>
+
+      {/* 컨트롤 바 */}
+      <section className="mx-auto max-w-7xl px-4 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+          <input
+            aria-label="검색"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+            placeholder="툴 이름·기능·키워드 검색 (예: 요약, 프레젠테이션)"
+            value={filters.q}
+            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
+          />
+          <select
+            aria-label="카테고리"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+            value={filters.category}
+            onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value as Filters["category"] }))}
+          >
+            <option value="all">전체 카테고리</option>
+            {Object.entries(CATEGORY_LABEL)
+              .filter(([k]) => k !== "all")
+              .map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+          </select>
+          <select
+            aria-label="난이도"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+            value={filters.level}
+            onChange={(e) => setFilters((f) => ({ ...f, level: e.target.value as Filters["level"] }))}
+          >
+            <option value="all">모든 난이도</option>
+            <option value="beginner">입문</option>
+            <option value="intermediate">중급</option>
+            <option value="advanced">고급</option>
+          </select>
+          <select
+            aria-label="정렬"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+            value={filters.sort}
+            onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value as Filters["sort"] }))}
+          >
+            <option value="name">가나다/ABC 순</option>
+            <option value="recent">최근 추가순</option>
+          </select>
+        </div>
+      </section>
+
+      {/* 카드 그리드 */}
+      <main className="mx-auto max-w-7xl px-4 pb-28">
+        <div className="mb-3 text-sm text-neutral-600">
+          총 <b>{filtered.length}</b> / {TOOLS.length}개
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((t) => (
+            <article
+              key={t.id}
+              className="group rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold group-hover:underline underline-offset-4">
+                    {t.name}
+                  </h3>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-neutral-600">
+                    <Badge>{CATEGORY_LABEL[t.category]}</Badge>
+                    <LevelDot level={t.level} />
+                  </div>
+                </div>
+                <a
+                  href={t.website}
+                  target="_blank"
+                  className="rounded-xl border border-neutral-200 px-2 py-1 text-xs hover:bg-neutral-100"
+                >
+                  방문하기 ↗
+                </a>
+              </div>
+
+              <p className="mt-3 text-sm text-neutral-700">{t.summary}</p>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {t.features.map((f) => (
+                  <Badge key={f}>{f}</Badge>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  onClick={() => setDetail(t)}
+                  className="rounded-xl bg-neutral-900 text-white text-xs px-3 py-1.5 hover:bg-neutral-800"
+                >
+                  자세히 보기
+                </button>
+                <button
+                  onClick={() => toggleCompare(t)}
+                  className={`rounded-xl text-xs px-3 py-1.5 border ${
+                    compare.find((c) => c.id === t.id)
+                      ? "border-indigo-500 text-indigo-600 bg-indigo-50"
+                      : "border-neutral-200 hover:bg-neutral-100"
+                  }`}
+                >
+                  {compare.find((c) => c.id === t.id) ? "비교 담김" : "비교 담기"}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </main>
+
+      {/* 비교 트레이 */}
+      {compare.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200 bg-white/95 backdrop-blur">
+          <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <span className="text-sm text-neutral-600">비교 ({compare.length}/3)</span>
+              {compare.map((t) => (
+                <span
+                  key={t.id}
+                  className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs"
+                >
+                  {t.name}
+                  <button
+                    aria-label="remove"
+                    className="rounded-full border border-neutral-200 px-1.5 hover:bg-white"
+                    onClick={() => toggleCompare(t)}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCompare([])}
+                className="rounded-xl border border-neutral-200 px-3 py-1.5 text-sm hover:bg-neutral-100"
+              >
+                비우기
+              </button>
+              <button
+                onClick={() => setDetail({
+                  id: "_compare" as any,
+                  name: "비교 결과",
+                  category: "platform" as any,
+                  level: "beginner",
+                  summary: "선택한 툴을 표로 비교합니다.",
+                  features: [],
+                  website: "#",
+                })}
+                className="rounded-xl bg-indigo-600 px-4 py-1.5 text-sm text-white hover:bg-indigo-500"
+              >
+                비교하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 상세 / 비교 모달 */}
+      {detail && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4"
+          onClick={() => setDetail(null)}
+        >
+          <div
+            className="w-full max-w-3xl rounded-2xl bg-white p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {detail.id === "_compare" ? (
+              <CompareTable tools={compare} onClose={() => setDetail(null)} />
+            ) : (
+              <Detail tool={detail} onClose={() => setDetail(null)} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* FAQ */}
+      <section id="faq" className="mx-auto max-w-7xl px-4 py-16">
+        <h2 className="text-xl font-semibold">빠른 가이드 & FAQ</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+            <h3 className="font-medium">수업에서 바로 쓸 조합</h3>
+            <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700 space-y-1">
+              <li>
+                자료조사: <b>Perplexity</b> → 정리: <b>NotebookLM</b> → 슬라이드: <b>Gamma</b> 또는 <b>Canva</b>
+              </li>
+              <li>
+                회의/인터뷰 녹음: <b>티로</b> 또는 <b>클로바노트</b> → 요약: <b>Lilys</b>
+              </li>
+              <li>
+                음악·영상 과제: 음악은 <b>Suno</b>, 영상은 <b>Vrew/CapCut/VideoStew</b>, 발표 영상은 <b>HeyGen</b>
+              </li>
+              <li>
+                글 초안/교안: <b>ChatGPT / Claude / Gemini</b> → 문서 다듬기: <b>Magic Write</b>
+              </li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+            <h3 className="font-medium">유의사항</h3>
+            <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700 space-y-1">
+              <li>개인정보·학생 데이터 업로드 전 기관 정책 확인</li>
+              <li>저작권: 음악/이미지/영상의 사용 범위를 각 서비스 약관에서 확인</li>
+              <li>모델 답변은 검증을 거쳐 수업에 반영</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 푸터 */}
+      <footer className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-6 text-sm text-neutral-600 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p>© {new Date().getFullYear()} AI 학습 대표 툴 20</p>
+          <div className="flex gap-3">
+            <a href="#" className="hover:underline">문의</a>
+            <a href="#" className="hover:underline">수업용 템플릿</a>
+            <a href="#" className="hover:underline">업데이트 로그</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function Detail({ tool, onClose }: { tool: Tool; onClose: () => void }) {
+  return (
+    <div>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold">{tool.name}</h3>
+          <div className="mt-1 flex items-center gap-2 text-xs text-neutral-600">
+            <Badge>{CATEGORY_LABEL[tool.category]}</Badge>
+            <LevelDot level={tool.level} />
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-full border border-neutral-200 px-2 py-1 text-sm hover:bg-neutral-50"
+        >
+          닫기 ✕
+        </button>
+      </div>
+      <p className="mt-3 text-sm text-neutral-700">{tool.summary}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {tool.features.map((f) => (
+          <Badge key={f}>{f}</Badge>
+        ))}
+      </div>
+      <div className="mt-5">
+        <a
+          href={tool.website}
+          target="_blank"
+          className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-800"
+        >
+          공식 사이트 열기 ↗
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function CompareTable({ tools, onClose }: { tools: Tool[]; onClose: () => void }) {
+  const rows = [
+    { key: "카테고리", render: (t: Tool) => CATEGORY_LABEL[t.category] },
+    { key: "난이도", render: (t: Tool) => (t.level === "beginner" ? "입문" : t.level === "intermediate" ? "중급" : "고급") },
+    { key: "주요 기능", render: (t: Tool) => t.features.join(", ") },
+    { key: "요약", render: (t: Tool) => t.summary },
+  ];
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-lg font-semibold">선택 툴 비교</h3>
+        <button
+          onClick={onClose}
+          className="rounded-full border border-neutral-200 px-2 py-1 text-sm hover:bg-neutral-50"
+        >
+          닫기 ✕
+        </button>
+      </div>
+      {tools.length === 0 ? (
+        <p className="text-sm text-neutral-600">비교할 툴을 1개 이상 선택해 주세요.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr>
+                <th className="w-32 text-left p-2 border-b border-neutral-200">항목</th>
+                {tools.map((t) => (
+                  <th key={t.id} className="text-left p-2 border-b border-neutral-200">
+                    {t.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.key} className="align-top">
+                  <td className="p-2 text-neutral-600 bg-neutral-50 border-b border-neutral-100">{r.key}</td>
+                  {tools.map((t) => (
+                    <td key={t.id + r.key} className="p-2 border-b border-neutral-100">
+                      {r.render(t)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
